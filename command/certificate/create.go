@@ -1,4 +1,4 @@
-package certificates
+package certificate
 
 import (
 	"crypto/rand"
@@ -23,35 +23,38 @@ func createCommand() cli.Command {
 		Name:   "create",
 		Action: cli.ActionFunc(createAction),
 		Usage:  "create a certificate or certificate signing request",
-		UsageText: `step certificates create SUBJECT CRT_FILE KEY_FILE [--type=CERTIFICATE_TYPE]
-		[--profile=PROFILE] [--csr] [--token=TOKEN]`,
-		Description: `The 'step certificates create' command generates a certificate or a
-  certificate signing requests (CSR) that can be signed later using 'step
-  certificates sign' (or some other tool) to produce a certificate.
+		UsageText: `**step certificate create** <subject> <crt_file> <key_file>
+		[**--csr**] [**--type**=<certificate_type>] [**--profile**=<profile>]`,
+		Description: `**step certificate create** generates a certificate or a
+certificate signing requests (CSR) that can be signed later using 'step
+certificates sign' (or some other tool) to produce a certificate.
 
-  This command can create x.509 certificates for use with TLS as well as SSH
-  certificates.
+This command creates x.509 certificates for use with TLS.
 
-POSITIONAL ARGUMENTS
-  SUBJECT
-    The subject of the certificate. Typically this is a hostname for services or an email address for people.
+## POSITIONAL ARGUMENTS
 
-  CRT_FILE
-    File to write CRT or CSR to (PEM format)
+<subject>
+: The subject of the certificate. Typically this is a hostname for services or an email address for people.
 
-  KEY_FILE
-    File to write private key to (PEM format)`,
+<crt_file>
+: File to write CRT or CSR to (PEM format)
+
+<key_file>
+: File to write private key to (PEM format)
+
+## EXIT CODES
+
+This command returns 0 on success and \>0 if any error occurs.
+`,
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "type",
 				Value: "x509",
 				Usage: `The type of certificate to generate. If not specified default is x509.
 
-  CERTIFICATE_TYPE must be one of:
-    x509
-      Generate an x.509 certificate suitable for use with TLS.
-    ssh
-      Generate an SSH certificate.`,
+: <type> is a case-sensitive string and must be one of:
+    **x509**
+    : Generate an x.509 certificate suitable for use with TLS.`,
 			},
 			cli.StringFlag{
 				Name:  "profile",
@@ -60,17 +63,15 @@ POSITIONAL ARGUMENTS
   certificate use and expiration. The default profile is 'leaf' which is suitable
   for a client or server using TLS.
 
-  PROFILE must be one of:
-    leaf
-	  Generate a leaf x.509 certificate suitable for use with TLs.
-    intermediate-ca
-      Generate a certificate that can be used to sign additional leaf or intermediate certificates.
-    root-ca
-      Generate a new self-signed root certificate suitable for use as a root CA.`,
-			},
-			cli.StringFlag{
-				Name:  "token",
-				Usage: `A provisioning token or bootstrap token for authenticating to a remote CA.`,
+: <profile> is a case-sensitive string and must be one of:
+    **leaf**
+	:  Generate a leaf x.509 certificate suitable for use with TLs.
+
+    **intermediate-ca**
+    :  Generate a certificate that can be used to sign additional leaf or intermediate certificates.
+
+    **root-ca**
+    :  Generate a new self-signed root certificate suitable for use as a root CA.`,
 			},
 			cli.BoolFlag{
 				Name:  "csr",
@@ -85,12 +86,10 @@ POSITIONAL ARGUMENTS
 				Usage: `The certificate authority private key used to sign the new certificate (PEM file).`,
 			},
 			cli.BoolFlag{
-				Name:  "no-password",
-				Usage: "TODO, requires --insecure",
-			},
-			cli.BoolFlag{
-				Name:   "subtle",
-				Hidden: true,
+				Name: "no-password",
+				Usage: `Do not ask for a password to encrypt the private key.
+Sensitive key material will be written to disk unencrypted. This is not
+recommended. Requires **--insecure** flag.`,
 			},
 			cli.BoolFlag{
 				Name:   "insecure",
