@@ -2,12 +2,14 @@
 
 set -eux
 
+ORIG_DIR=${PWD##*/}
 cd ../
-export GOPATH=\"$(pwd)/.gobuild\"
-SRCDIR=${GOPATH}/src/github.com/smallstep/cli
+export GOPATH=$(pwd)/.gobuild
 [ -d ${GOPATH} ] && rm -rf ${GOPATH}
 mkdir -p ${GOPATH}/{src,pkg,bin}
+
+SRCDIR=${GOPATH}/src/github.com/smallstep/cli
 mkdir -p ${SRCDIR}
-cp -r cli-0.0.1-rc.1/* ${SRCDIR}
+cp -r ${ORIG_DIR}/* ${SRCDIR}
 cd ${SRCDIR}
 make build
