@@ -58,6 +58,27 @@ func GenerateJWKFromPEM(filename string) (*JSONWebKey, error) {
 			Certificates: []*realx509.Certificate{crt},
 			Algorithm:    algForKey(key.PublicKey),
 		}, nil
+	case []*x509.Certificate:
+		chain := key
+		if len(chain) == 0 {
+			return nil, errors.New("jose/generate: no certificates in chain")
+		}
+		// have: step-cli x509 Certificate
+		// want: crypto/x509 Certificate
+		certs := make([]*realx509.Certificate, len(chain))
+		for i := range chain {
+			crt, err := realx509.ParseCertificate(chain[i].Raw)
+			if err != nil {
+				return nil, err
+			}
+			certs[i] = crt
+		}
+		leafPubkey := chain[0].PublicKey
+		return &JSONWebKey{
+			Key:          leafPubkey,
+			Certificates: certs,
+			Algorithm:    algForKey(leafPubkey),
+		}, nil
 	default:
 		return nil, errors.Errorf("error parsing %s: unsupported key type '%T'", filename, key)
 	}
