@@ -28,6 +28,8 @@ const (
 	ed25519PrivateKey
 	rsaPublicKey
 	rsaPrivateKey
+	x509CertificateKey
+	x509CertificateChainKey
 )
 
 type testdata struct {
@@ -68,6 +70,8 @@ var files = map[string]testdata{
 	"testdata/pkcs8/openssl.rsa2048.enc.pem": {rsaPrivateKey, true},
 	"testdata/pkcs8/openssl.rsa4096.pem":     {rsaPrivateKey, false},
 	"testdata/pkcs8/openssl.rsa4096.pub.pem": {rsaPublicKey, false},
+	"testdata/ca.crt":                        {x509CertificateKey, false},
+	"testdata/foo-bundle.crt":                {x509CertificateChainKey, false},
 }
 
 func TestRead(t *testing.T) {
@@ -97,6 +101,10 @@ func TestRead(t *testing.T) {
 			assert.Type(t, &rsa.PublicKey{}, key)
 		case rsaPrivateKey:
 			assert.Type(t, &rsa.PrivateKey{}, key)
+		case x509CertificateKey:
+			assert.Type(t, &x509.Certificate{}, key)
+		case x509CertificateChainKey:
+			assert.Type(t, []*x509.Certificate{}, key)
 		default:
 			t.Errorf("type %T not supported", key)
 		}

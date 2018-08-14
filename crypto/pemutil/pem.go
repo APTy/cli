@@ -86,7 +86,7 @@ func Parse(b []byte, opts ...Options) (interface{}, error) {
 	switch {
 	case block == nil:
 		return nil, errors.Errorf("error decoding %s: is not a valid PEM encoded key", ctx.filename)
-	case len(rest) > 0:
+	case len(rest) > 0 && block.Type != "CERTIFICATE":
 		return nil, errors.Errorf("error decoding %s: contains more than one key", ctx.filename)
 	}
 
@@ -125,7 +125,27 @@ func Parse(b []byte, opts ...Options) (interface{}, error) {
 		return priv, errors.Wrapf(err, "error parsing %s", ctx.filename)
 	case "CERTIFICATE":
 		crt, err := x509.ParseCertificate(block.Bytes)
-		return crt, errors.Wrapf(err, "error parsing %s", ctx.filename)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error parsing %s", ctx.filename)
+		}
+		// Return a single certificate if there is only one in the PEM block.
+		if len(rest) == 0 {
+			return crt, nil
+		}
+		// Parse and return the entire certificate chain if one exists.
+		certs := []*x509.Certificate{crt}
+		for len(rest) != 0 {
+			block, rest = pem.Decode(rest)
+			if block == nil {
+				return nil, errors.Errorf("error decoding %s: contains an invalid PEM encoded key", ctx.filename)
+			}
+			crt, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return nil, errors.Wrapf(err, "error parsing %s", ctx.filename)
+			}
+			certs = append(certs, crt)
+		}
+		return certs, nil
 	default:
 		return nil, errors.Errorf("error decoding %s: contains an unexpected header '%s'", ctx.filename, block.Type)
 	}
